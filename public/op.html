@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Over Priced Reports</title>
+    <link rel="icon" href="images/download.png" type="image/gif" sizes="16x16">
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/index.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body>
+<div class="full-screen">
+    <div class="header-container">
+        <h1 class="header-title text-center text-white fw-bold">OverPriced Items Reports</h1>
+        <div class="btn-container">
+            <button id="logoutBtn" class="btn btn-primary">Logout</button>
+            <button id="statisticsBtn" class="btn btn-info">Show Statistics</button>
+        </div>
+    </div>
+    <div class="report-dashboard-container table-responsive">
+        <table id="reports-table" class="table table-striped table-bordered">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Mobile No</th>
+                    <th>CNIC</th>
+                    <th>Location</th>
+                    <th>Evidence</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Report rows will be dynamically inserted here -->
+            </tbody>
+        </table>
+    </div>
+</div>
+<div class="loading-overlay"></div>
+<div class="loading-spinner"></div>
+
+<div class="modal fade" id="statisticsModal" tabindex="-1" role="dialog" aria-labelledby="statisticsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="statisticsModalLabel">Report Statistics</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="report-totals">
+                    <p><strong>Total Reports:</strong> <span id="totalReports"></span></p>
+                    <p><strong>Arrived:</strong> <span id="arrivedReports"></span> (<span id="arrivedPercentage"></span>%)</p>
+                    <p><strong>In Progress:</strong> <span id="inProgressReports"></span> (<span id="inProgressPercentage"></span>%)</p>
+                    <p><strong>Completed:</strong> <span id="completedReports"></span> (<span id="completedPercentage"></span>%)</p>
+                </div>
+
+                <!-- Pie Chart -->
+                <canvas id="statusPieChart" width="400" height="400"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Video Modal -->
+<div class="modal fade" id="videoModal" tabindex="-1" role="dialog" aria-labelledby="videoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="videoModalLabel">Evidence Video</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <video id="videoPlayer" controls style="width: 100%;">
+                    <source id="videoSource" src="" >
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="scripts/index.js"></script>  
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+async function fetchAndUpdateReports() {
+    try {
+        const response = await fetch('/reports/overpriced-items');
+        const reports = await response.json();
+        const tbody = document.querySelector('#reports-table tbody');
+        tbody.innerHTML = ''; // Clear the table
+        reports.data.forEach(report => {
+            const row = document.createElement('tr');
+
+            const dateCell = document.createElement('td');
+            dateCell.textContent = report.date;
+            row.appendChild(dateCell);
+            
+            const timeCell = document.createElement('td');
+            timeCell.textContent = report.time;
+            row.appendChild(timeCell);
+
+            const mobileNoCell = document.createElement('td');
+            mobileNoCell.textContent = report.mobileNo;
+            row.appendChild(mobileNoCell);
+
+            const cnicCell = document.createElement('td');
+            cnicCell.textContent = report.cnic;
+            row.appendChild(cnicCell);
+
+            const locationCell = document.createElement('td');
+            locationCell.textContent = report.location;
+            row.appendChild(locationCell);
+
+            const evidenceCell = document.createElement('td');
+            const evidenceContainer = document.createElement('div');
+            evidenceContainer.classList.add('evidence-container');
+
+           // In the section where you handle evidence
+           if (Array.isArray(report.evidence)) {
+    report.evidence.forEach(evidence => {
+        if (evidence && evidence.file) {
+            const evidenceItem = document.createElement('div');
+            evidenceItem.classList.add('evidence-item');
+
+            let mediaElement;
+
+// Extract the file name and extension from the URL
+const fileNameWithExtension = evidence.file.split('/').pop(); // Get the last part of the URL
+const fileName = fileNameWithExtension.split('?')[0]; // Remove query parameters
+const fileExtension = fileName.split('.').pop().toLowerCase(); // Get the file extension
+console.log(`Processing file: ${evidence.file}, extracted extension: ${fileExtension}`);
+
+// Check if the file is a video
+if (['mp4', 'mkv', 'avi','webm','mpeg-4'].includes(fileExtension)) {
+    // Create video element
+    mediaElement = document.createElement('video');
+    mediaElement.controls = true; // Add controls to video
+    mediaElement.classList.add('youtube-style-video'); // Add a class for styling
+
+    // Set the source for the video
+    const videoSource = document.createElement('source');
+    videoSource.src = evidence.file; // Set the source to the video file
+
+    // Set MIME type based on the file extension
+    if (fileExtension === 'mp4') {
+        videoSource.type = 'video/mp4';
+    } else if (fileExtension === 'mkv') {
+        videoSource.type = 'video/mkv'; // MIME type for MKV
+    }else if(fileExtension==="avi"){
+        videoSource.type="video/avi"
+    }else if(fileExtension==="webm"){
+        videoSource.type="video/webm"
+    } 
+    else {
+        videoSource.type = 'video/mp4'; // Default to mp4 if unsure
+    }
+
+    mediaElement.appendChild(videoSource); // Append source to video element
+
+    // Add click event to open video in modal
+    mediaElement.addEventListener('click', () => {
+        const videoSource = document.getElementById('videoSource');
+        const videoPlayer = document.getElementById('videoPlayer');
+
+        // Set the source to the video file from Firebase
+        videoSource.src = evidence.file;
+
+        // Load the new video source
+        videoPlayer.load();
+        videoPlayer.onloadedmetadata = () => {
+            $('#videoModal').modal('show'); // Show the modal only when metadata is loaded
+        };
+
+        // Error handling
+        videoPlayer.onerror = function () {
+            console.error("Error loading video: ", evidence.file);
+            alert("Failed to load video. Please check the file.");
+        };
+    });
+} else {
+    // Create image element as fallback
+    mediaElement = document.createElement('img');
+    mediaElement.src = evidence.file;
+    mediaElement.alt = 'Evidence Image'; // Optional: set an alt attribute
+    console.log(`Not a video file, using image: ${evidence.file}`);
+}
+
+            evidenceItem.appendChild(mediaElement);
+            evidenceContainer.appendChild(evidenceItem);
+        }
+    });
+}
+
+
+
+            evidenceCell.appendChild(evidenceContainer);
+            row.appendChild(evidenceCell);
+
+            const descriptionCell = document.createElement('td');
+            descriptionCell.textContent = report.description;
+            row.appendChild(descriptionCell);
+
+            const feedbackCell = document.createElement('td');
+            const feedbackSelect = document.createElement('select');
+            feedbackSelect.classList.add('form-control');
+            if (report.feedback == '1') {
+                feedbackSelect.innerHTML = `
+                    <option value="1" disabled selected>Arrived</option>
+                    <option value="2">In Progress</option>
+                    <option value="3">Completed</option>
+                `;
+            } else if (report.feedback == '2') {
+                feedbackSelect.innerHTML = `
+                    <option value="2" disabled selected>In Progress</option>
+                    <option value="3">Completed</option>
+                `;
+                feedbackSelect.style.backgroundColor = '#3498db';
+            } else if (report.feedback == '3') {
+                feedbackSelect.innerHTML = `
+                    <option value="3" disabled selected>Completed</option>
+                `;
+                feedbackSelect.disabled = true;
+                feedbackSelect.style.backgroundColor = '#2ecc71'; 
+            }
+
+            feedbackSelect.addEventListener('change', async () => {
+                const newFeedback = feedbackSelect.value;
+                const confirmChange = confirm(`Are you sure you want to change the status to ${feedbackSelect.options[feedbackSelect.selectedIndex].text}?`);
+                if (confirmChange) {
+                    try {
+                        const response = await fetch(`/reports/update-feedback/${report.id}`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                feedback: newFeedback,
+                                desc: report.description,
+                                email: report.email,
+                            }),
+                        });
+
+                        if (response.ok) {
+                            alert('Feedback status updated successfully');
+                            fetchAndUpdateReports();  
+                        } else {
+                            const errorData = await response.json();
+                            console.error('Error updating feedback:', errorData.message);
+                        }
+                    } catch (error) {
+                        console.error('Error updating feedback:', error);
+                    }
+                } else {
+                    feedbackSelect.value = report.feedback; 
+                }
+            });
+
+            feedbackCell.appendChild(feedbackSelect);
+            row.appendChild(feedbackCell);
+
+            tbody.appendChild(row);
+        });
+
+        updateStatistics(reports.data);
+    } catch (error) {
+        console.error('Error fetching reports:', error);
+    }
+}
+
+// Call the function to fetch and update reports on page load
+fetchAndUpdateReports();
+
+// Add event listeners for logout and statistics buttons
+document.getElementById('logoutBtn').addEventListener('click', () => {
+    // Logout logic here
+});
+
+document.getElementById('statisticsBtn').addEventListener('click', () => {
+    $('#statisticsModal').modal('show');
+});
+
+async function updateStatistics(reports) {
+    const totalReports = reports.length;
+    const arrivedReports = reports.filter(r => r.feedback === '1').length;
+    const inProgressReports = reports.filter(r => r.feedback === '2').length;
+    const completedReports = reports.filter(r => r.feedback === '3').length;
+
+    document.getElementById('totalReports').textContent = totalReports;
+    document.getElementById('arrivedReports').textContent = arrivedReports;
+    document.getElementById('inProgressReports').textContent = inProgressReports;
+    document.getElementById('completedReports').textContent = completedReports;
+
+    const arrivedPercentage = ((arrivedReports / totalReports) * 100).toFixed(2);
+    const inProgressPercentage = ((inProgressReports / totalReports) * 100).toFixed(2);
+    const completedPercentage = ((completedReports / totalReports) * 100).toFixed(2);
+
+    document.getElementById('arrivedPercentage').textContent = arrivedPercentage;
+    document.getElementById('inProgressPercentage').textContent = inProgressPercentage;
+    document.getElementById('completedPercentage').textContent = completedPercentage;
+
+    const ctx = document.getElementById('statusPieChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: ['Arrived', 'In Progress', 'Completed'],
+            datasets: [{
+                data: [arrivedReports, inProgressReports, completedReports],
+                backgroundColor: ['#3498db', '#f39c12', '#2ecc71'],
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: 'Report Status Distribution',
+                }
+            }
+        }
+    });
+}
+</script>
+</body>
+</html>

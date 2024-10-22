@@ -1,0 +1,214 @@
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600&display=swap');
+
+body {
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(0deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.3)), url(../images/images.png);
+  opacity: 1;
+  background-size: cover;
+  background-position: center;
+  font-family: 'Open Sans', sans-serif; /* Updated font for a modern look */
+  color: #fff;
+}
+
+.container-fluid {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+.password-toggle {
+  position: relative;
+}
+
+.password-toggle .seepass, 
+.password-toggle1 .seepass1 {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+
+.form-group {
+  position: relative;
+  margin-bottom: 30px;
+}
+
+.form-group .form-control {
+  padding-right: 30px;
+  height: 45px;
+}
+
+.error-message {
+  position: absolute;
+  bottom: -20px;
+  left: 0;
+  color: red;
+  font-size: 12px;
+  display: none;
+}
+
+h2 {
+  font-size: 32px; /* Increased font size for better visibility */
+  color: #000000;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #fff;
+  padding-bottom: 10px;
+}
+
+.f {
+  background-color: rgba(255, 255, 255, 0.9); /* Slightly less transparency */
+  color: #000;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  padding: 30px; /* Increased padding for a more spacious feel */
+}
+
+.label-icon {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  left: 10px;
+  color: #ccc;
+}
+
+.form-control {
+  width: 100%;
+  padding: 15px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-sizing: border-box;
+  transition: border-color 0.3s; /* Smooth border transition */
+}
+
+.form-control:focus {
+  border-color: #3498db; /* Highlight border on focus */
+  outline: none;
+}
+
+.button {
+  background-color: #3498db;
+  color: #fff;
+  transition: background-color 0.3s ease, transform 0.3s; /* Added transform transition */
+  width: 100%; /* Make button full width */
+  padding: 15px 20px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 18px;
+  text-align: center;
+  text-decoration: none;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.fas, .a {
+  color: #000;
+}
+
+.button:hover {
+  background-color: #2980b9;
+  transform: scale(1.05); /* Slightly enlarge on hover */
+}
+
+.text-muted {
+  color: #000000;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.logo {
+  animation: fadeIn 1.5s ease-out;
+}
+
+.modal-content {
+  animation: slideIn 0.8s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.login-form input[type="text"],
+.login-form input[type="password"] {
+  width: 100%;
+  padding: 12px 20px;
+  margin: 8px 0;
+  display: inline-block;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  box-sizing: border-box;
+  animation: fadeIn 0.8s ease-out;
+  transition: border-color 0.3s; /* Smooth border transition */
+}
+
+.login-form input[type="text"]:focus,
+.login-form input[type="password"]:focus {
+  border-color: #3498db; /* Highlight border on focus */
+  outline: none;
+}
+
+.password-icon {
+  cursor: pointer;
+}
+
+.password-icon:hover {
+  color: #007bff;
+}
+
+.btn {
+  font-size: 16px;
+  border-radius: 20px;
+  padding: 12px 24px;
+  transition: all 0.5s ease;
+}
+
+.loading-spinner {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: 16px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 16px solid #3498db;
+  width: 120px;
+  height: 120px;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+.loading-overlay {
+  display: none;
+  position: fixed;
+  z-index: 9998;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+}

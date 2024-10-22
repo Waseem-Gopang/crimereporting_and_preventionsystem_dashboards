@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Electric Theft Reports</title>
+    <link rel="icon" href="images/download.png" type="image/gif" sizes="16x16">
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/index.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    </head>
+<body>
+<div class="full-screen">
+    <div class="header-container">
+        <h1 class="header-title text-center text-white fw-bold">Electric Theft Reports</h1>
+        <div class="btn-container">
+            <button id="logoutBtn" class="btn btn-primary">Logout</button>
+            <button id="statisticsBtn" class="btn btn-info">Show Statistics</button>
+        </div>
+    </div>
+    <div class="report-dashboard-container table-responsive">
+        <table id="reports-table" class="table table-striped table-bordered">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Mobile No</th>
+                    <th>CNIC</th>
+                    <th>Location</th>
+                    <th>Evidence</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Report rows will be dynamically inserted here -->
+            </tbody>
+        </table>
+    </div>
+</div>
+<div class="loading-overlay"></div>
+<div class="loading-spinner"></div>
+
+<div class="modal fade" id="statisticsModal" tabindex="-1" role="dialog" aria-labelledby="statisticsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="statisticsModalLabel">Report Statistics</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Section to display totals -->
+                <div class="report-totals">
+                    <p><strong>Total Reports:</strong> <span id="totalReports"></span></p>
+                    <p><strong>Arrived:</strong> <span id="arrivedReports"></span> (<span id="arrivedPercentage"></span>%)</p>
+                    <p><strong>In Progress:</strong> <span id="inProgressReports"></span> (<span id="inProgressPercentage"></span>%)</p>
+                    <p><strong>Completed:</strong> <span id="completedReports"></span> (<span id="completedPercentage"></span>%)</p>
+                </div>
+
+                <!-- Pie Chart -->
+                <canvas id="statusPieChart" width="400" height="400"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="scripts/index.js"></script>  
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    
+    async function fetchAndUpdateReports() {
+        try {
+            const response = await fetch('/reports/electric-theft');
+            const reports = await response.json();
+        const tbody = document.querySelector('#reports-table tbody');
+        tbody.innerHTML = ''; 
+        reports.data.forEach(report => {
+            const row = document.createElement('tr');
+
+            const dateCell = document.createElement('td');
+            dateCell.textContent = report.date;
+            row.appendChild(dateCell);
+
+            const timeCell = document.createElement('td');
+            timeCell.textContent = report.time;
+            row.appendChild(timeCell);
+
+            const mobileNoCell = document.createElement('td');
+            mobileNoCell.textContent = report.mobileNo;
+            row.appendChild(mobileNoCell);
+
+            const cnicCell = document.createElement('td');
+            cnicCell.textContent = report.cnic;
+            row.appendChild(cnicCell);
+
+            const locationCell = document.createElement('td');
+            locationCell.textContent = report.location;
+            row.appendChild(locationCell);
+
+ // Create a table cell for the evidence
+const evidenceCell = document.createElement('td');
+const evidenceContainer = document.createElement('div');
+evidenceContainer.classList.add('evidence-container');
+  // In the section where you handle evidence
+  if (Array.isArray(report.evidence)) {
+    report.evidence.forEach(evidence => {
+        if (evidence && evidence.file) {
+            const evidenceItem = document.createElement('div');
+            evidenceItem.classList.add('evidence-item');
+
+            let mediaElement;
+
+// Extract the file name and extension from the URL
+const fileNameWithExtension = evidence.file.split('/').pop(); // Get the last part of the URL
+const fileName = fileNameWithExtension.split('?')[0]; // Remove query parameters
+const fileExtension = fileName.split('.').pop().toLowerCase(); // Get the file extension
+console.log(`Processing file: ${evidence.file}, extracted extension: ${fileExtension}`);
+
+// Check if the file is a video
+if (['mp4', 'mkv', 'avi', 'webm','mpeg-4'].includes(fileExtension)) {
+    // Create video element
+    mediaElement = document.createElement('video');
+    mediaElement.controls = true; // Add controls to video
+    mediaElement.classList.add('youtube-style-video'); // Add a class for styling
+
+    // Set the source for the video
+    const videoSource = document.createElement('source');
+    videoSource.src = evidence.file; // Set the source to the video file
+
+    // Set MIME type based on the file extension
+    if (fileExtension === 'mp4') {
+        videoSource.type = 'video/mp4';
+    } else if (fileExtension === 'mkv') {
+        videoSource.type = 'video/mkv'; // MIME type for MKV
+    }else if(fileExtension==="avi"){
+        videoSource.type="video/avi"
+    }else if(fileExtension==="webm"){
+        videoSource.type="video/webm"
+
+    } 
+    else {
+        videoSource.type = 'video/mp4'; // Default to mp4 if unsure
+    }
+
+    mediaElement.appendChild(videoSource); // Append source to video element
+
+    // Add click event to open video in modal
+    mediaElement.addEventListener('click', () => {
+        const videoSource = document.getElementById('videoSource');
+        const videoPlayer = document.getElementById('videoPlayer');
+
+        // Set the source to the video file from Firebase
+        videoSource.src = evidence.file;
+
+        // Load the new video source
+        videoPlayer.load();
+        videoPlayer.onloadedmetadata = () => {
+            $('#videoModal').modal('show'); // Show the modal only when metadata is loaded
+        };
+
+        // Error handling
+        videoPlayer.onerror = function () {
+            console.error("Error loading video: ", evidence.file);
+            alert("Failed to load video. Please check the file.");
+        };
+    });
+} else {
+    // Create image element as fallback
+    mediaElement = document.createElement('img');
+    mediaElement.src = evidence.file;
+    mediaElement.alt = 'Evidence Image'; // Optional: set an alt attribute
+    console.log(`Not a video file, using image: ${evidence.file}`);
+}
+
+            evidenceItem.appendChild(mediaElement);
+            evidenceContainer.appendChild(evidenceItem);
+        }
+    });
+}
+
+// Append the evidence container to the cell and then to the row
+evidenceCell.appendChild(evidenceContainer);
+row.appendChild(evidenceCell);
+
+
+
+            const descriptionCell = document.createElement('td');
+            descriptionCell.textContent = report.description;
+            row.appendChild(descriptionCell);
+
+            const feedbackCell = document.createElement('td');
+            const feedbackSelect = document.createElement('select');
+            feedbackSelect.classList.add('form-control');
+
+            if (report.feedback == '1') {
+                feedbackSelect.innerHTML = `
+                    <option value="1" disabled selected>Arrived</option>
+                    <option value="2">In Progress</option>
+                    <option value="3">Completed</option>
+                `;
+            } else if (report.feedback == '2') {
+                feedbackSelect.innerHTML = `
+                    <option value="2" disabled selected>In Progress</option>
+                    <option value="3">Completed</option>
+                `;
+                feedbackSelect.style.backgroundColor = '#3498db';
+            } else if (report.feedback == '3') {
+                feedbackSelect.innerHTML = `
+                    <option value="3" disabled selected>Completed</option>
+                `;
+                feedbackSelect.disabled = true;
+                feedbackSelect.style.backgroundColor = '#2ecc71'; 
+            }
+
+
+            feedbackSelect.addEventListener('change', async () => {
+                const newFeedback = feedbackSelect.value;
+                const confirmChange = confirm(`Are you sure you want to change the status to ${feedbackSelect.options[feedbackSelect.selectedIndex].text}?`);
+                if (confirmChange) {
+                    try {
+                        const response = await fetch(`/reports/update-feedback/${report.id}`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                feedback: newFeedback,
+                                desc: report.description,
+                                email: report.email,
+                            }),
+                        });
+
+                        if (response.ok) {
+                            alert('Feedback status updated successfully');
+                            fetchAndUpdateReports();  
+                        } else {
+                            const errorData = await response.json();
+                            console.error('Error updating feedback:', errorData.message);
+                        }
+                    } catch (error) {
+                        console.error('Error updating feedback:', error);
+                    }
+                }
+            });
+
+            feedbackCell.appendChild(feedbackSelect);
+            row.appendChild(feedbackCell);
+
+            tbody.appendChild(row);
+        });
+    } catch (error) {
+        console.error('Error fetching reports:', error);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    fetchAndUpdateReports();
+
+    setInterval(fetchAndUpdateReports, 600000);
+});
+document.getElementById('statisticsBtn').addEventListener('click', async () => {
+    try {
+        const response = await fetch('/reports/electric-theft');
+        const reports = await response.json();
+
+        let arrived = 0;
+        let inProgress = 0;
+        let completed = 0;
+
+        reports.data.forEach(report => {
+            if (report.feedback == 1) {
+                arrived++;
+            } else if (report.feedback == 2) {
+                inProgress++;
+            } else if (report.feedback == 3) {
+                completed++;
+            }
+        });
+
+        const totalReports = reports.data.length;
+        const arrivedPercentage = ((arrived / totalReports) * 100).toFixed(2);
+        const inProgressPercentage = ((inProgress / totalReports) * 100).toFixed(2);
+        const completedPercentage = ((completed / totalReports) * 100).toFixed(2);
+
+        document.getElementById('totalReports').textContent = totalReports;
+        document.getElementById('arrivedReports').textContent = arrived;
+        document.getElementById('inProgressReports').textContent = inProgress;
+        document.getElementById('completedReports').textContent = completed;
+
+        document.getElementById('arrivedPercentage').textContent = arrivedPercentage;
+        document.getElementById('inProgressPercentage').textContent = inProgressPercentage;
+        document.getElementById('completedPercentage').textContent = completedPercentage;
+
+        $('#statisticsModal').modal('show');
+
+        $('#statisticsModal').on('shown.bs.modal', function () {
+            if (window.statusPieChart && typeof window.statusPieChart.destroy === 'function') {
+                window.statusPieChart.destroy(); 
+            }
+
+            const ctx = document.getElementById('statusPieChart').getContext('2d');
+            window.statusPieChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Arrived', 'In Progress', 'Completed'],
+                    datasets: [{
+                        data: [arrived, inProgress, completed],
+                        backgroundColor: ['#f1c40f', '#3498db', '#2ecc71'],
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    title: {
+                        display: true,
+                        text: 'Report Status Distribution'
+                    },
+                    tooltips: {
+                        callbacks: {
+                            label: function(tooltipItem, data) {
+                                const dataset = data.datasets[tooltipItem.datasetIndex];
+                                const total = dataset.data.reduce((previousValue, currentValue) => previousValue + currentValue);
+                                const currentValue = dataset.data[tooltipItem.index];
+                                const percentage = ((currentValue / total) * 100).toFixed(2);
+                                return `${data.labels[tooltipItem.index]}: ${currentValue} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            });
+        });
+
+    } catch (error) {
+        console.error('Error fetching report statistics:', error);
+    }
+});
+
+</script>
+</body>
+</html>
