@@ -6,7 +6,7 @@ const session = require('express-session');
 const nodemailer = require('nodemailer');
 const port = process.env.PORT || 5000;
 const admin = require('firebase-admin');
-const serviceAccount = require('../src/crimereportingandprevent-22511-firebase-adminsdk-kekxg-56c23d086b.json');
+//const serviceAccount = require('../src/crimereportingandprevent-22511-firebase-adminsdk-kekxg-56c23d086b.json');
 require('dotenv').config();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
